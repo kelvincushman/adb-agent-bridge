@@ -16,10 +16,10 @@ def tap(device, target):
 
 
 def text(device, s, clear=False):
-    # measured on SM-S721B: ADBKeyboard broadcast ~0.1-0.4s vs `input text` ~2s
-    # (device-side JVM spawn per `input` call), so the broadcast is the fast
-    # path for ALL text when ADBKeyboard is installed; `input text` is the
-    # ASCII-only fallback for devices without it
+    # measured on SM-S721B: `input text` injects ~35ms per character (2s for a
+    # caption) while the ADBKeyboard broadcast commits any string in ~0.1s, so
+    # the broadcast is the fast path for ALL text when ADBKeyboard is
+    # installed; `input text` is the ASCII-only fallback for devices without it
     if not getattr(device, "ime_unavailable", False):
         try:
             _ensure_ime(device)
