@@ -1,0 +1,61 @@
+"""`aab` CLI: ui | tap | text | screenshot."""
+import argparse
+import sys
+
+from . import Bridge
+
+
+def main(argv=None):
+    p = argparse.ArgumentParser(prog="aab", description="ADB Agent Bridge")
+    p.add_argument("-s", "--serial", help="device serial (adb -s)")
+    sub = p.add_subparsers(dest="cmd", required=True)
+
+    sub.add_parser("ui", help="dump UI elements")
+
+    t = sub.add_parser("tap", help="tap by --text/--id/--desc or x y")
+    t.add_argument("--text")
+    t.add_argument("--id")
+    t.add_argument("--desc")
+    t.add_argument("xy", nargs="*", type=int)
+
+    x = sub.add_parser("text", help="type text into the focused field")
+    x.add_argument("string")
+    x.add_argument("--clear", action="store_true", help="empty the field first")
+
+    s = sub.add_parser("screenshot", help="save a PNG")
+    s.add_argument("path")
+
+    a = p.parse_args(argv)
+    b = Bridge(a.serial)
+    try:
+        _dispatch(a, b, t)
+    except RuntimeError as e:
+        sys.exit(f"aab: {e}")
+
+
+def _dispatch(a, b, t):
+    if a.cmd == "ui":
+        for e in b.ui():
+            flags = "".join(f" {f}" for f in ("clickable", "scrollable")
+                            if getattr(e, f))
+            print(f"{e.cls} text={e.text!r} id={e.id!r} desc={e.desc!r} "
+                  f"center={e.center}{flags}")
+        print(f"# dump took {b.device.last_dump_ms}ms", file=sys.stderr)
+    elif a.cmd == "tap":
+        if len(a.xy) == 2:
+            b.tap(tuple(a.xy))
+        elif a.text or a.id or a.desc:
+            el = b.find(text=a.text, id=a.id, desc=a.desc)
+            if el is None:
+                sys.exit("aab: no matching element")
+            b.tap(el)
+        else:
+            t.error("give --text/--id/--desc or two coordinates")
+    elif a.cmd == "text":
+        b.text(a.string, clear=a.clear)
+    elif a.cmd == "screenshot":
+        b.screenshot(a.path)
+
+
+if __name__ == "__main__":
+    main()

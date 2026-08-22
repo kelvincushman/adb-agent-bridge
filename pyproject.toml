@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "adb-agent-bridge"
+version = "0.1.0"
+description = "Fast, accurate agent-to-Android control over plain ADB: semantic UI addressing via uiautomator, no on-device install"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Kelvin Lee" }]
+requires-python = ">=3.9"
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/kelvincushman/adb-agent-bridge"
+
+[project.scripts]
+aab = "adb_agent_bridge.cli:main"
+
+[tool.setuptools]
+packages = ["adb_agent_bridge"]
