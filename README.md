@@ -53,12 +53,22 @@ aab screenshot out.png
 
 ## How it works
 
-- `ui()` runs `uiautomator dump` (~200–800ms) and parses the XML.
+- `ui()` runs `uiautomator dump` and parses the XML.
 - `tap(element)` taps the element's bounds center via `input tap`.
-- `text()` uses `input text` for ASCII; non-ASCII goes through ADBKeyboard's
-  `ADB_INPUT_B64` broadcast. The IME is switched once per session — no sleeps.
+- `text()` sends everything through ADBKeyboard's `ADB_INPUT_B64` broadcast
+  when it's installed, falling back to `input text` (ASCII only) when it
+  isn't. The IME is switched once per session with a single 1s settle wait.
+  Restore the normal keyboard afterwards with `adb shell ime reset`.
 - Dump latency is recorded per call (`Bridge.device.last_dump_ms`): measure
   before optimizing.
+
+Measured on a Samsung SM-S721B (Galaxy S24 FE): `uiautomator dump` ~2.2s
+(uiautomator cold-spawns per call), `input text`/`input tap` ~2s each (the
+device-side `input` binary spawns a JVM per call), ADBKeyboard broadcast
+~0.1s steady-state (~1.5s for the first call including the IME switch).
+That's why the broadcast is the preferred text path — and the numbers the
+latency log collects are what will justify (or keep ruling out) a native
+on-device service.
 
 ## Roadmap
 

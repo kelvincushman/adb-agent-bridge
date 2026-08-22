@@ -1,3 +1,12 @@
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _no_ime_settle(monkeypatch):
+    from adb_agent_bridge import actions
+    monkeypatch.setattr(actions, "IME_SETTLE_S", 0)
+
+
 class FakeDevice:
     """Records shell commands; returns queued replies (empty string when exhausted)."""
 

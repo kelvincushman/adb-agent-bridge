@@ -22,10 +22,29 @@ def test_tap_xy():
     assert d.calls == ["input tap 540 1200"]
 
 
-def test_text_ascii_fast_path_escapes():
+def test_text_prefers_adbkeyboard_even_for_ascii():
+    # measured: broadcast ~0.1-0.4s vs `input text` ~2s, so it wins when installed
     d = FakeDevice()
+    actions.text(d, "hello world")
+    b64 = base64.b64encode(b"hello world").decode()
+    assert d.calls[-1] == f"am broadcast -a ADB_INPUT_B64 --es msg {b64}"
+
+
+def test_text_falls_back_to_input_text_without_adbkeyboard():
+    d = FakeDevice(shell_returns=["", "", "com.samsung.android.honeyboard/..."])
     actions.text(d, "it's (fine)")
-    assert d.calls == ["input text it\\'s%s\\(fine\\)"]
+    assert d.calls[-1] == "input text it\\'s%s\\(fine\\)"
+    assert d.ime_unavailable
+    actions.text(d, "again")  # no repeated IME probing once known-missing
+    assert d.calls[-1] == "input text again"
+    assert not any(c.startswith("ime ") for c in d.calls[-2:])
+
+
+def test_text_percent_without_adbkeyboard_raises():
+    import pytest
+    d = FakeDevice(shell_returns=["", "", "honeyboard"])
+    with pytest.raises(RuntimeError):
+        actions.text(d, "Error: %s")
 
 
 def test_text_unicode_uses_adbkeyboard_broadcast():
@@ -71,12 +90,13 @@ def test_ime_switched_once_per_session():
 def test_text_clear_broadcasts_clear_first():
     d = FakeDevice()
     actions.text(d, "hi", clear=True)
+    b64 = base64.b64encode(b"hi").decode()
     assert d.calls == [
         f"ime enable {actions.ADB_IME}",
         f"ime set {actions.ADB_IME}",
         "settings get secure default_input_method",
         "am broadcast -a ADB_CLEAR_TEXT",
-        "input text hi",
+        f"am broadcast -a ADB_INPUT_B64 --es msg {b64}",
     ]
 
 
