@@ -10,7 +10,7 @@ readme = "README.md"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Kelvin Lee" }]
 requires-python = ">=3.9"
-dependencies = []
+dependencies = ["Pillow>=10.1"]
 
 [project.urls]
 Homepage = "https://github.com/kelvincushman/adb-agent-bridge"

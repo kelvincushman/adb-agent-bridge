@@ -11,6 +11,7 @@ class Device:
         self.serial = serial
         self.ime_ready = False    # set by actions._ensure_ime, once per session
         self.last_dump_ms = None  # set by ui.dump: measure before optimizing
+        self.screen_size = None   # cached by marks._screen_size
 
     def _run(self, args, binary=False):
         cmd = ["adb"] + (["-s", self.serial] if self.serial else []) + args

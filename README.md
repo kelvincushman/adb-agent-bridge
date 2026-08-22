@@ -35,6 +35,10 @@ b.tap((540, 1200))                # raw coordinates still available
 b.text("hello world")             # instant, no IME dance
 b.text("héllo 👋")                # unicode via ADBKeyboard broadcast
 b.screenshot("screen.png")
+
+path, legend = b.marks()          # numbered Set-of-Marks screenshot for a
+b.tap(legend[3])                  # vision model: it picks a number, you tap it
+b.tap("C7")                       # grid cell (10 square columns A-J, rows from 1)
 ```
 
 CLI:
@@ -43,6 +47,7 @@ CLI:
 aab ui                    # dump elements (one per line, dump latency on stderr)
 aab tap --text Post       # tap by text / --id / --desc, or: aab tap 540 1200
 aab text "a caption"      # --clear to empty the field first
+aab marks annotated.png   # numbered overlay + legend for vision fallback
 aab screenshot out.png
 ```
 
@@ -57,8 +62,6 @@ aab screenshot out.png
 
 ## Roadmap
 
-- Set-of-Marks overlays (numbered screenshot annotations) for screens with a
-  thin/absent view tree.
 - A native on-device accessibility service is deliberately **not** built:
   `uiautomator dump` already provides the tree. It will only be added if
   measured dump latency proves insufficient at scale.

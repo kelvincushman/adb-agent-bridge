@@ -12,11 +12,15 @@ def main(argv=None):
 
     sub.add_parser("ui", help="dump UI elements")
 
-    t = sub.add_parser("tap", help="tap by --text/--id/--desc or x y")
+    t = sub.add_parser("tap", help="tap by --text/--id/--desc, --grid C7, or x y")
     t.add_argument("--text")
     t.add_argument("--id")
     t.add_argument("--desc")
+    t.add_argument("--grid", help="grid cell like C7")
     t.add_argument("xy", nargs="*", type=int)
+
+    m = sub.add_parser("marks", help="write a numbered Set-of-Marks screenshot")
+    m.add_argument("path", nargs="?", default="marks.png")
 
     x = sub.add_parser("text", help="type text into the focused field")
     x.add_argument("string")
@@ -44,13 +48,20 @@ def _dispatch(a, b, t):
     elif a.cmd == "tap":
         if len(a.xy) == 2:
             b.tap(tuple(a.xy))
+        elif a.grid:
+            b.tap(a.grid)
         elif a.text or a.id or a.desc:
             el = b.find(text=a.text, id=a.id, desc=a.desc)
             if el is None:
                 sys.exit("aab: no matching element")
             b.tap(el)
         else:
-            t.error("give --text/--id/--desc or two coordinates")
+            t.error("give --text/--id/--desc, --grid, or two coordinates")
+    elif a.cmd == "marks":
+        path, legend = b.marks(a.path)
+        for n, e in legend.items():
+            print(f"{n}: text={e.text!r} id={e.id!r} desc={e.desc!r} center={e.center}")
+        print(f"wrote {path}")
     elif a.cmd == "text":
         b.text(a.string, clear=a.clear)
     elif a.cmd == "screenshot":
