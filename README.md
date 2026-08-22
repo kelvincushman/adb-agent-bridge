@@ -10,9 +10,12 @@ agent taps element centers instead of guessing pixels from screenshots.
 ## Why this exists
 
 This tool came out of running a real fleet of Android phones driven by AI
-agents (content automation across social apps). The stack we inherited was
-built the way most phone automation is: **for humans watching a screen, not
-for agents**. Two things made it slow and unreliable:
+agents — [ContentSwarm](https://github.com/kelvincushman/ContentSwarm), an
+open phone-agent framework for content automation, with
+[Orphus](https://github.com/kelvincushman/orphus) as the agent harness
+driving it. The stack we inherited was built the way most phone automation
+is: **for humans watching a screen, not for agents**. Two things made it
+slow and unreliable:
 
 - **The blind pixel loop.** Every action meant: capture a 1–2 MB screenshot,
   send it to a vision model, have the model guess an (x, y) coordinate, then
@@ -166,9 +169,11 @@ plain-ADB path remains the default and the regression baseline.
 - **Fleet-phone verification of the fast backend** — the HTTP backend ships
   mock-tested; its first live run happens on a fleet device, not a personal
   phone.
-- **ContentSwarm-style integration** (element-target taps, layout-robust flow
-  recording, UI endpoint, prefetch-during-model-thinking) lives downstream of
-  this library.
+- **[ContentSwarm](https://github.com/kelvincushman/ContentSwarm)
+  integration** — element-target taps, layout-robust flow recording with
+  per-replay run reports, a `/ui` endpoint, and prefetch-during-model-thinking
+  — lives downstream of this library, driven by
+  [Orphus](https://github.com/kelvincushman/orphus) agents.
 
 ## License & credits
 
