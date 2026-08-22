@@ -8,7 +8,11 @@ class FakeDevice:
 
     def shell(self, cmd):
         self.calls.append(cmd)
-        return self._returns.pop(0) if self._returns else ""
+        if self._returns:
+            return self._returns.pop(0)
+        if cmd == "settings get secure default_input_method":
+            return "com.android.adbkeyboard/.AdbIME"  # pretend ADBKeyboard is active
+        return ""
 
     def exec_out(self, cmd):
         self.calls.append(cmd)

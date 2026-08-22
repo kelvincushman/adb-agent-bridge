@@ -35,8 +35,30 @@ def test_text_unicode_uses_adbkeyboard_broadcast():
     assert d.calls == [
         f"ime enable {actions.ADB_IME}",
         f"ime set {actions.ADB_IME}",
+        "settings get secure default_input_method",
         f"am broadcast -a ADB_INPUT_B64 --es msg {b64}",
     ]
+
+
+def test_text_with_percent_avoids_input_text():
+    # `input text` treats %s as a space placeholder; literal % must not hit it
+    d = FakeDevice()
+    actions.text(d, "Error: %s not found")
+    assert d.calls[-1].startswith("am broadcast -a ADB_INPUT_B64")
+
+
+def test_text_leading_dash_avoids_input_text():
+    d = FakeDevice()
+    actions.text(d, "-1")
+    assert d.calls[-1].startswith("am broadcast -a ADB_INPUT_B64")
+
+
+def test_ensure_ime_raises_when_adbkeyboard_missing():
+    import pytest
+    d = FakeDevice(shell_returns=["", "", "com.samsung.android.honeyboard/..."])
+    with pytest.raises(RuntimeError):
+        actions.text(d, "héllo")
+    assert not d.ime_ready
 
 
 def test_ime_switched_once_per_session():
@@ -52,6 +74,7 @@ def test_text_clear_broadcasts_clear_first():
     assert d.calls == [
         f"ime enable {actions.ADB_IME}",
         f"ime set {actions.ADB_IME}",
+        "settings get secure default_input_method",
         "am broadcast -a ADB_CLEAR_TEXT",
         "input text hi",
     ]

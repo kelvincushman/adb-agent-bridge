@@ -15,7 +15,10 @@ class Device:
 
     def _run(self, args, binary=False):
         cmd = ["adb"] + (["-s", self.serial] if self.serial else []) + args
-        r = subprocess.run(cmd, capture_output=True, timeout=15)
+        try:
+            r = subprocess.run(cmd, capture_output=True, timeout=15)
+        except subprocess.TimeoutExpired:
+            raise RuntimeError(f"adb {args[0]} timed out after 15s") from None
         if r.returncode != 0:
             err = r.stderr.decode(errors="replace").strip()
             raise RuntimeError(f"adb {args[0]} failed: {err or r.returncode}")

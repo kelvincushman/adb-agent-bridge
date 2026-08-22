@@ -25,8 +25,8 @@ class Bridge:
         actions.tap(self.device, target)
 
     def marks(self, out_path="marks.png"):
-        png = self.device.exec_out("screencap -p")
-        return _marks.annotate(png, self.ui(), out_path)
+        els = self.ui()  # slow dump first, screenshot right after: overlay matches
+        return _marks.annotate(self.device.exec_out("screencap -p"), els, out_path)
 
     def text(self, s, clear=False):
         actions.text(self.device, s, clear=clear)

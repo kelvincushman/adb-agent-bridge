@@ -44,7 +44,10 @@ def grid_to_xy(device, cell):
 
 def _screen_size(device):
     if getattr(device, "screen_size", None) is None:
-        m = re.search(r"(\d+)x(\d+)", device.shell("wm size"))
+        out = device.shell("wm size")
+        # input coords follow the override resolution when one is set
+        m = (re.search(r"Override size:\s*(\d+)x(\d+)", out)
+             or re.search(r"(\d+)x(\d+)", out))
         if not m:
             raise RuntimeError("could not read screen size from `wm size`")
         device.screen_size = (int(m.group(1)), int(m.group(2)))

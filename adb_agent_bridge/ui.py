@@ -47,13 +47,19 @@ def parse(xml_text):
 
 
 def dump(device):
+    last = "no <hierarchy> in dump output"
     for _ in range(2):  # ponytail: one retry covers dumps that fail mid-animation
         t0 = time.monotonic()
-        xml_text = device.shell(_DUMP_CMD)
-        device.last_dump_ms = round((time.monotonic() - t0) * 1000)
-        if "<hierarchy" in xml_text:
-            return parse(xml_text)
-    raise RuntimeError("uiautomator dump failed twice; fall back to screenshot/vision tier")
+        try:
+            xml_text = device.shell(_DUMP_CMD)
+            device.last_dump_ms = round((time.monotonic() - t0) * 1000)
+            if "<hierarchy" in xml_text:
+                return parse(xml_text)
+        except (RuntimeError, ET.ParseError) as e:  # truncated mid-animation dumps
+            last = e
+    raise RuntimeError(
+        f"uiautomator dump failed twice ({last}); fall back to screenshot/vision tier"
+    )
 
 
 def find(elements, text=None, id=None, desc=None):

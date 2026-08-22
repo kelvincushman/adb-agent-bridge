@@ -18,9 +18,11 @@ def text(device, s, clear=False):
         device.shell("am broadcast -a ADB_CLEAR_TEXT")
     if not s:
         return
-    if s.isascii() and s.isprintable():
+    # fast path only for text `input text` types verbatim: % is a device-side
+    # placeholder (%s = space) and a leading - can parse as a flag
+    if s.isascii() and s.isprintable() and "%" not in s and not s.startswith("-"):
         device.shell("input text " + _escape(s))
-    else:  # unicode/emoji/newlines via ADBKeyboard, base64 to dodge shell quoting
+    else:  # everything else via ADBKeyboard, base64 to dodge shell quoting
         _ensure_ime(device)
         b64 = base64.b64encode(s.encode()).decode()
         device.shell(f"am broadcast -a ADB_INPUT_B64 --es msg {b64}")
@@ -52,4 +54,8 @@ def _ensure_ime(device):
         return
     device.shell(f"ime enable {ADB_IME}")
     device.shell(f"ime set {ADB_IME}")
+    if ADB_IME not in device.shell("settings get secure default_input_method"):
+        raise RuntimeError(
+            "ADBKeyboard did not activate — install it for unicode/clear= input"
+        )
     device.ime_ready = True

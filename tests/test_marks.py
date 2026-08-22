@@ -39,6 +39,12 @@ def test_grid_to_xy_square_cells():
     assert len(d.calls) == 1  # screen size cached after first call
 
 
+def test_grid_prefers_override_screen_size():
+    # touch coords follow the override resolution when one is set
+    d = FakeDevice(shell_returns=["Physical size: 1080x2340\nOverride size: 720x1600"])
+    assert marks.grid_to_xy(d, "A1") == (36, 36)
+
+
 def test_grid_to_xy_rejects_out_of_range():
     d = FakeDevice(shell_returns=["Physical size: 1080x2340"])
     with pytest.raises(ValueError):

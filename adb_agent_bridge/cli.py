@@ -33,7 +33,7 @@ def main(argv=None):
     b = Bridge(a.serial)
     try:
         _dispatch(a, b, t)
-    except RuntimeError as e:
+    except (RuntimeError, ValueError) as e:  # ValueError: bad --grid cells
         sys.exit(f"aab: {e}")
 
 

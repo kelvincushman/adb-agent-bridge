@@ -62,3 +62,11 @@ def test_dump_raises_after_two_failures():
     d = FakeDevice(shell_returns=["", "killed"])
     with pytest.raises(RuntimeError):
         ui.dump(d)
+
+
+def test_dump_truncated_xml_raises_runtimeerror_not_parseerror():
+    truncated = '<?xml version="1.0"?><hierarchy rotation="0"><node bounds="[0,0][10,10]"'
+    d = FakeDevice(shell_returns=[truncated, truncated])
+    with pytest.raises(RuntimeError):  # documented fallback contract, not ParseError
+        ui.dump(d)
+    assert len(d.calls) == 2
