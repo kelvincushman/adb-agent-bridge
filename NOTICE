@@ -1,0 +1,11 @@
+ADB Agent Bridge
+Copyright 2026 Kelvin Lee
+
+Developed by Kelvin Lee (https://github.com/kelvincushman/adb-agent-bridge).
+Redistributions of this software must retain this attribution in accordance
+with the Apache License, Version 2.0.
+
+The unicode text-input approach was inspired by ADBKeyboard
+(https://github.com/senzhk/ADBKeyBoard). No ADBKeyboard source code is
+included in this project; it is used only as an optional on-device IME,
+driven via its documented broadcast intents.
