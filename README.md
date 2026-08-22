@@ -77,6 +77,10 @@ b.screenshot("screen.png")
 
 path, legend = b.marks()          # numbered Set-of-Marks screenshot; the
 b.tap(legend[3])                  # vision model picks a number, you tap it
+
+b.prefetch_ui()                   # start the next dump in the background
+# ... do other work (e.g. the model decides the next action) ...
+b.ui()                            # returns the prefetched result instantly
 ```
 
 CLI (installed as `aab`):
@@ -88,6 +92,8 @@ aab tap --grid C7         # or grid cell, or: aab tap 540 1200
 aab text "a caption"      # --clear to empty the field first
 aab marks annotated.png   # numbered overlay + legend for the vision fallback
 aab screenshot out.png
+aab swipe 540 1600 540 400
+aab key 66                # keyevent (66 = ENTER)
 aab -s SERIAL ...         # pick a device when several are connected
 ```
 
@@ -105,6 +111,7 @@ All numbers measured live on a Samsung SM-S721B (Galaxy S24 FE), host on USB:
 | first `text()` of a session | ~1.5s | one-time IME switch + settle wait |
 | `screenshot()` | ~0.8s | `screencap -p` over exec-out |
 | `ui()` — `uiautomator dump` | **2.1–3.0s** | the bottleneck: fresh uiautomator process per call |
+| `ui()` on very heavy screens | up to ~6s | seen on Facebook Marketplace's tree |
 | old vision loop (replaced) | 2–5s/action | plus missed taps and retries |
 | old IME text dance (replaced) | ~4s/field | now ~0.1s |
 
@@ -118,8 +125,32 @@ Two findings worth knowing:
   switch fixes what the old stack worked around with four sleeps per field.
 
 An agent action cycle (dump → find → tap) is therefore ~2.5s, ~95% of it the
-dump. The per-call latency log exists precisely to decide whether that ever
-justifies a persistent on-device server (see Roadmap).
+dump. Two ways to attack that, both built in:
+
+- **Prefetch** (`prefetch_ui()`): start the next dump right after an action so
+  it overlaps the caller's own work — in an agent loop the model's 1–3s of
+  thinking hides most of the dump for free. Roughly 2× on real flows, no
+  device changes.
+- **The optional fast backend** below: ~5–8× flat, one APK install per device.
+
+## Optional fast backend (fleet phones)
+
+Plain devices need nothing and keep working unchanged. For sub-second action
+cycles, install [openatx/android-uiautomator-server](https://github.com/openatx/android-uiautomator-server)
+(MIT) on the device and keep its instrumentation running:
+
+```sh
+adb install app-uiautomator.apk
+adb install app-uiautomator-test.apk
+adb shell am instrument -w com.github.uiautomator.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+It keeps uiautomator alive and serves the same hierarchy XML over HTTP —
+Bridge probes for it once per session (`adb forward` + `/ping`) and uses it
+automatically; `aab ui` reports which backend served the dump, and if the
+server dies mid-session the bridge falls back to plain dumps. Expected dumps:
+~0.1–0.3s instead of 2–3s. **Not yet verified against real hardware** — the
+plain-ADB path remains the default and the regression baseline.
 
 ## Limitations
 
@@ -132,12 +163,12 @@ justifies a persistent on-device server (see Roadmap).
 
 ## Roadmap
 
+- **Fleet-phone verification of the fast backend** — the HTTP backend ships
+  mock-tested; its first live run happens on a fleet device, not a personal
+  phone.
 - **ContentSwarm-style integration** (element-target taps, layout-robust flow
-  recording, UI endpoint) lives downstream of this library.
-- **A persistent on-device UI server** (sub-300ms dumps) is deliberately not
-  built yet. `uiautomator dump`'s ~2–3s is the one remaining bottleneck, and
-  the latency log this library keeps is the evidence base for deciding when —
-  and whether — that escalation is worth an on-device install.
+  recording, UI endpoint, prefetch-during-model-thinking) lives downstream of
+  this library.
 
 ## License & credits
 

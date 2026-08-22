@@ -29,6 +29,13 @@ def main(argv=None):
     s = sub.add_parser("screenshot", help="save a PNG")
     s.add_argument("path")
 
+    w = sub.add_parser("swipe", help="swipe x1 y1 x2 y2")
+    w.add_argument("coords", nargs=4, type=int)
+    w.add_argument("--ms", type=int, default=300)
+
+    k = sub.add_parser("key", help="send a keyevent code (66 = ENTER)")
+    k.add_argument("code", type=int)
+
     a = p.parse_args(argv)
     b = Bridge(a.serial)
     try:
@@ -44,7 +51,7 @@ def _dispatch(a, b, t):
                             if getattr(e, f))
             print(f"{e.cls} text={e.text!r} id={e.id!r} desc={e.desc!r} "
                   f"center={e.center}{flags}")
-        print(f"# dump took {b.device.last_dump_ms}ms", file=sys.stderr)
+        print(f"# dump took {b.device.last_dump_ms}ms ({b.backend})", file=sys.stderr)
     elif a.cmd == "tap":
         if len(a.xy) == 2:
             b.tap(tuple(a.xy))
@@ -66,6 +73,10 @@ def _dispatch(a, b, t):
         b.text(a.string, clear=a.clear)
     elif a.cmd == "screenshot":
         b.screenshot(a.path)
+    elif a.cmd == "swipe":
+        b.swipe(*a.coords, ms=a.ms)
+    elif a.cmd == "key":
+        b.key(a.code)
 
 
 if __name__ == "__main__":

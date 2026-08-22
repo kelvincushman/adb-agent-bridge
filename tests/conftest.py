@@ -26,3 +26,7 @@ class FakeDevice:
     def exec_out(self, cmd):
         self.calls.append(cmd)
         return b"PNGDATA"
+
+    def forward(self, remote):
+        self.calls.append(f"forward {remote}")
+        return 7912

@@ -29,3 +29,7 @@ class Device:
 
     def exec_out(self, cmd):
         return self._run(["exec-out", cmd], binary=True)
+
+    def forward(self, remote):
+        """Forward a device port to an auto-assigned local port; returns it."""
+        return int(self._run(["forward", "tcp:0", remote]).strip())
