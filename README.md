@@ -51,8 +51,12 @@ measured latency proves one is needed. Every dump is timed
 ## Install
 
 ```sh
-pip install adb-agent-bridge   # or: pip install -e . from a checkout
+pip install "adb-agent-bridge @ git+https://github.com/kelvincushman/adb-agent-bridge"
+# or from a checkout: pip install -e .
 ```
+
+(Not yet on PyPI — install from git. Pin a commit SHA with `@<sha>` for
+reproducible installs.)
 
 Requirements:
 
