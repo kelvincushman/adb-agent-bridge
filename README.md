@@ -63,6 +63,47 @@ Requirements:
   and unicode text input (recommended). Without it, plain-ASCII text still
   works via `input text`.
 
+## Setup from zero
+
+Never used adb before? Full path from a factory phone to a working bridge:
+
+1. **Install adb** — download [platform-tools](https://developer.android.com/tools/releases/platform-tools),
+   extract, and add the folder to your PATH (macOS/Linux:
+   `export PATH="$PATH:~/platform-tools"`; or `brew install android-platform-tools`).
+2. **Enable USB debugging on the phone** — Settings → About phone → tap
+   *Build number* 7 times to unlock Developer options, then Settings →
+   Developer options → enable *USB debugging*.
+3. **Connect and authorize** — plug in via USB, run `adb devices`, and accept
+   the "Allow USB debugging?" prompt on the phone. The device must list as
+   `device` (not `unauthorized`).
+4. **Install the bridge and verify** —
+   ```sh
+   pip install adb-agent-bridge
+   aab ui        # should print the current screen's elements
+   ```
+5. **(Recommended) Install ADBKeyboard** for ~100ms unicode text:
+   ```sh
+   curl -LO https://github.com/senzhk/ADBKeyBoard/raw/master/ADBKeyboard.apk
+   adb install ADBKeyboard.apk
+   adb shell ime enable com.android.adbkeyboard/.AdbIME
+   ```
+   The bridge switches to it automatically when typing; restore the normal
+   keyboard afterwards with `adb shell ime reset`.
+
+With several phones connected, pass `-s <serial>` to `aab` (serials come
+from `adb devices`) or `Bridge("SERIAL")` in Python.
+
+### Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| `adb: no devices/emulators found` | Cable/port issue, or USB debugging off (step 2) |
+| Device shows `unauthorized` | Accept the debugging prompt on the phone (step 3) |
+| `aab: adb shell failed …` | Run `adb devices` — the device dropped or locked |
+| `aab ui` raises "dump failed twice" | Screen mid-animation or canvas-drawn app — retry, or fall back to `aab marks` / screenshots |
+| Unicode text does nothing | ADBKeyboard missing (step 5) |
+| Phone keyboard stuck on "ADB Keyboard" | `adb shell ime reset` |
+
 ## Quick start
 
 ```python
@@ -165,6 +206,43 @@ plain-ADB path remains the default and the regression baseline.
 - `uiautomator dump` can fail mid-animation; the bridge retries once, then
   raises so callers can fall back to the vision tier.
 - Unicode text, `clear=`, and fast typing need ADBKeyboard installed.
+
+## Agent integration (Pi / Atomic / Orphus)
+
+An agent-facing skill ships in this repo at
+[`skills/adb-agent-bridge/SKILL.md`](skills/adb-agent-bridge/SKILL.md) —
+Pi, Atomic, and Orphus all read the same skill format, so one file covers
+all three. Install it into your harness's skills directory:
+
+```sh
+# Orphus                                  # Pi / Atomic
+mkdir -p ~/.orphus/agent/skills           mkdir -p ~/.pi/agent/skills
+git clone --depth 1 https://github.com/kelvincushman/adb-agent-bridge /tmp/aab-skill
+cp -r /tmp/aab-skill/skills/adb-agent-bridge ~/.orphus/agent/skills/   # or ~/.pi/agent/skills/
+```
+
+(Project-level also works: `.pi/skills/adb-agent-bridge/` in the repo the
+agent runs from.)
+
+Or skip the manual steps entirely — paste this **setup prompt** to any agent
+with shell access:
+
+> Set up adb-agent-bridge so you can control Android phones semantically.
+> 1) `pip install adb-agent-bridge` (needs Python 3.9+ and `adb` on PATH —
+> install Android platform-tools if missing). 2) Run `adb devices` and get the
+> phone to state `device` (have me accept the USB-debugging prompt if it says
+> `unauthorized`). 3) Verify with `aab ui` — it must print UI elements.
+> 4) For fast/unicode text, download and `adb install` ADBKeyboard.apk from
+> github.com/senzhk/ADBKeyBoard, then
+> `adb shell ime enable com.android.adbkeyboard/.AdbIME`. 5) Install the skill
+> from github.com/kelvincushman/adb-agent-bridge (`skills/adb-agent-bridge/`)
+> into your skills directory (`~/.orphus/agent/skills/` or
+> `~/.pi/agent/skills/`). 6) Report back: device serial, element count from
+> `aab ui`, and whether unicode typing works.
+
+For a full fleet framework built on this bridge (flow learning, replay with
+run reports, health monitoring, REST API), see
+[ContentSwarm](https://github.com/kelvincushman/ContentSwarm).
 
 ## Roadmap
 

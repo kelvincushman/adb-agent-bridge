@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "adb-agent-bridge"
-version = "0.1.0"
+version = "0.1.1"
 description = "Fast, accurate agent-to-Android control over plain ADB: semantic UI addressing via uiautomator, no on-device install"
 readme = "README.md"
 license = { text = "Apache-2.0" }
