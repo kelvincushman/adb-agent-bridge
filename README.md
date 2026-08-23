@@ -51,7 +51,9 @@ measured latency proves one is needed. Every dump is timed
 ## Install
 
 ```sh
-pip install adb-agent-bridge
+pipx install adb-agent-bridge    # CLI use — works everywhere, puts `aab` in ~/.local/bin
+pip install adb-agent-bridge     # library use — inside a venv (plain pip is PEP 668-blocked
+                                 # on Homebrew/Debian Python)
 # from git: pip install "adb-agent-bridge @ git+https://github.com/kelvincushman/adb-agent-bridge"
 # from a checkout: pip install -e .
 ```
@@ -78,17 +80,21 @@ Never used adb before? Full path from a factory phone to a working bridge:
    `device` (not `unauthorized`).
 4. **Install the bridge and verify** —
    ```sh
-   pip install adb-agent-bridge
-   aab ui        # should print the current screen's elements
+   pipx install adb-agent-bridge   # or: pip install adb-agent-bridge in a venv
+   aab ui                          # should print the current screen's elements
    ```
+   pipx places `aab` in `~/.local/bin` — run `pipx ensurepath` if a fresh
+   shell can't find it.
 5. **(Recommended) Install ADBKeyboard** for ~100ms unicode text:
    ```sh
    curl -LO https://github.com/senzhk/ADBKeyBoard/raw/master/ADBKeyboard.apk
    adb install ADBKeyboard.apk
    adb shell ime enable com.android.adbkeyboard/.AdbIME
    ```
-   The bridge switches to it automatically when typing; restore the normal
-   keyboard afterwards with `adb shell ime reset`.
+   The `ime enable` line only verifies the install — the bridge enables and
+   selects ADBKeyboard by itself whenever it types. Restore the normal
+   keyboard after a session with `adb shell ime reset` (this disables
+   ADBKeyboard again, which is fine: the bridge re-enables it next time).
 
 With several phones connected, pass `-s <serial>` to `aab` (serials come
 from `adb devices`) or `Bridge("SERIAL")` in Python.
@@ -228,17 +234,21 @@ Or skip the manual steps entirely — paste this **setup prompt** to any agent
 with shell access:
 
 > Set up adb-agent-bridge so you can control Android phones semantically.
-> 1) `pip install adb-agent-bridge` (needs Python 3.9+ and `adb` on PATH —
-> install Android platform-tools if missing). 2) Run `adb devices` and get the
+> 1) `pipx install adb-agent-bridge` — or `pip install` inside a venv; plain
+> pip is PEP 668-blocked on Homebrew/Debian Python. Needs Python 3.9+ and
+> `adb` on PATH (install Android platform-tools if missing); ensure
+> `~/.local/bin` is on PATH for `aab`. 2) Run `adb devices` and get the
 > phone to state `device` (have me accept the USB-debugging prompt if it says
 > `unauthorized`). 3) Verify with `aab ui` — it must print UI elements.
 > 4) For fast/unicode text, download and `adb install` ADBKeyboard.apk from
-> github.com/senzhk/ADBKeyBoard, then
-> `adb shell ime enable com.android.adbkeyboard/.AdbIME`. 5) Install the skill
-> from github.com/kelvincushman/adb-agent-bridge (`skills/adb-agent-bridge/`)
-> into your skills directory (`~/.orphus/agent/skills/` or
-> `~/.pi/agent/skills/`). 6) Report back: device serial, element count from
-> `aab ui`, and whether unicode typing works.
+> github.com/senzhk/ADBKeyBoard if not already installed (the bridge enables
+> and selects it automatically when typing — no manual `ime` commands
+> needed). 5) Clone github.com/kelvincushman/adb-agent-bridge (or use an
+> existing checkout) and copy `skills/adb-agent-bridge/` into whichever
+> skills directory exists — `~/.orphus/agent/skills/` or
+> `~/.pi/agent/skills/`, both if both exist. 6) Report back: device serial,
+> the number of element lines `aab ui` prints (ignore the `#` latency
+> header), and whether unicode typing works.
 
 For a full fleet framework built on this bridge (flow learning, replay with
 run reports, health monitoring, REST API), see

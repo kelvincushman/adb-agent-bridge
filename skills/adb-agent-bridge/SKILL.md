@@ -13,7 +13,7 @@ plain ADB - so you tap element centers (cannot miss) and commit text in
 ## Setup check (run once per session)
 
 ```bash
-aab --help >/dev/null 2>&1 || pip install adb-agent-bridge
+aab --help >/dev/null 2>&1 || pipx install adb-agent-bridge || pip install adb-agent-bridge
 adb devices    # phone must show as "device", not "unauthorized"/"offline"
 ```
 
@@ -54,12 +54,13 @@ Python (same capabilities): `from adb_agent_bridge import Bridge`;
 ```bash
 curl -LO https://github.com/senzhk/ADBKeyBoard/raw/master/ADBKeyboard.apk
 adb install ADBKeyboard.apk
-adb shell ime enable com.android.adbkeyboard/.AdbIME
 ```
 
 Without it, plain-ASCII text still works (slower); unicode and `--clear` do
-not. The bridge switches the IME itself when typing; restore the user's
-keyboard after a session with `adb shell ime reset`.
+not. No manual `ime` commands needed — the bridge enables and selects the
+IME itself whenever it types. Restore the user's keyboard after a session
+with `adb shell ime reset` (this disables ADBKeyboard again; the bridge
+re-enables it next session).
 
 ## Gotchas
 
