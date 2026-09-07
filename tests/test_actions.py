@@ -113,3 +113,29 @@ def test_screenshot_writes_png_bytes(tmp_path):
     actions.screenshot(d, out)
     assert out.read_bytes() == b"PNGDATA"
     assert d.calls == ["screencap -p"]
+
+
+def test_compose_sms_quotes_body_in_uri_and_never_sends():
+    d = FakeDevice()
+    actions.compose_sms(d, "+44 7700 900123", "Hello & goodbye")
+    assert d.calls == [
+        "am start -W -a android.intent.action.VIEW -d 'smsto:+447700900123?body=Hello%20%26%20goodbye'"
+    ]
+    assert "SEND" not in d.calls[0]
+
+
+def test_compose_whatsapp_targets_package_and_never_sends():
+    d = FakeDevice()
+    actions.compose_whatsapp(d, "+44 7700 900123", "Are you free?")
+    assert d.calls == [
+        "am start -W -a android.intent.action.VIEW -d 'https://wa.me/447700900123?text=Are%20you%20free%3F' -p com.whatsapp"
+    ]
+
+
+def test_communication_rejects_bad_recipient_and_uri_scheme():
+    import pytest
+    d = FakeDevice()
+    with pytest.raises(ValueError):
+        actions.compose_sms(d, "$(reboot)", "no")
+    with pytest.raises(ValueError):
+        actions.open_uri(d, "file:///data/data/private")

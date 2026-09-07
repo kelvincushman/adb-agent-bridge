@@ -3,6 +3,7 @@
 ponytail: per-command adb spawn costs ~30ms while uiautomator dump costs
 200-800ms; add a persistent shell only if last_dump_ms logging blames spawn.
 """
+import shlex
 import subprocess
 
 
@@ -26,6 +27,10 @@ class Device:
 
     def shell(self, cmd):
         return self._run(["shell", cmd])
+
+    def shell_argv(self, args):
+        """Run a device shell command with every argument quoted safely."""
+        return self.shell(shlex.join(str(arg) for arg in args))
 
     def exec_out(self, cmd):
         return self._run(["exec-out", cmd], binary=True)

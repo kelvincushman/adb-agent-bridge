@@ -126,6 +126,9 @@ b.text("héllo 👋", clear=True)    # unicode/emoji; clear empties the field fi
 b.swipe(540, 1600, 540, 400)      # scroll
 b.key(66)                         # keyevent (66 = ENTER)
 b.screenshot("screen.png")
+b.compose_sms("+447700900123", "Draft text")       # opens composer, never sends
+b.compose_whatsapp("+447700900123", "Draft text")  # opens composer, never sends
+b.open_uri("https://example.com")                    # allowlisted VIEW intent
 
 path, legend = b.marks()          # numbered Set-of-Marks screenshot; the
 b.tap(legend[3])                  # vision model picks a number, you tap it
@@ -146,8 +149,27 @@ aab marks annotated.png   # numbered overlay + legend for the vision fallback
 aab screenshot out.png
 aab swipe 540 1600 540 400
 aab key 66                # keyevent (66 = ENTER)
+aab compose-sms +447700900123 --body "Draft text"
+aab compose-whatsapp +447700900123 --body "Draft text"
+aab open-uri https://example.com
 aab -s SERIAL ...         # pick a device when several are connected
 ```
+
+## Communications and safe intent access
+
+Version 0.2 adds deterministic entry points for communication workflows. The
+bridge opens a populated composer and stops there: it never presses **Send**.
+The calling orchestrator must inspect the UI, obtain any required human
+approval, tap the live Send element once, and inspect again to verify the
+result. Phone numbers are validated, message bodies are percent encoded, and
+device-shell arguments are quoted. Arbitrary shell commands and `file:` URIs
+are deliberately outside the public API.
+
+SMS uses Android's default `smsto:` handler. WhatsApp uses its documented
+`wa.me` deep link and targets `com.whatsapp`. These routes can prepare a draft
+without a model; reading conversation history still happens through `ui()` or
+a screenshot because Android does not expose another app's private message
+database over ordinary, non-root ADB.
 
 After a session, restore the device's normal keyboard with
 `adb shell ime reset` (the bridge leaves ADBKeyboard active for speed).
@@ -212,6 +234,9 @@ plain-ADB path remains the default and the regression baseline.
 - `uiautomator dump` can fail mid-animation; the bridge retries once, then
   raises so callers can fall back to the vision tier.
 - Unicode text, `clear=`, and fast typing need ADBKeyboard installed.
+- SMS/WhatsApp composers depend on an installed handler and the recipient's
+  country-code phone number. The bridge cannot bypass login, app sandboxing,
+  end-to-end encryption, or `FLAG_SECURE` screens.
 
 ## Agent integration (Pi / Atomic / Orphus)
 

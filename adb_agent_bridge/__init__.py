@@ -80,6 +80,15 @@ class Bridge:
     def screenshot(self, path):
         return actions.screenshot(self.device, path)
 
+    def open_uri(self, uri, package=None):
+        return actions.open_uri(self.device, uri, package=package)
+
+    def compose_sms(self, recipient, body=""):
+        return actions.compose_sms(self.device, recipient, body)
+
+    def compose_whatsapp(self, recipient, body=""):
+        return actions.compose_whatsapp(self.device, recipient, body)
+
     def marks(self, out_path="marks.png"):
         els = self.ui()  # slow dump first, screenshot right after: overlay matches
         return _marks.annotate(self.device.exec_out("screencap -p"), els, out_path)

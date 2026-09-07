@@ -1,12 +1,16 @@
 """Device actions: tap, text, swipe, key, screenshot."""
 import base64
+import re
 import time
 from pathlib import Path
+from urllib.parse import quote, urlparse
 
 ADB_IME = "com.android.adbkeyboard/.AdbIME"
 IME_SETTLE_S = 1.0  # seen live on SM-S721B: a broadcast right after `ime set`
                     # fires before the IME binds to the field and the text drops
 _SHELL_SPECIALS = set("\\'\"`&|;<>()[]{}*?~#$^")
+_PHONE = re.compile(r"^\+?[0-9][0-9 ()-]{2,30}$")
+_URI_SCHEMES = {"http", "https", "sms", "smsto", "tel", "geo", "mailto"}
 
 
 def tap(device, target):
@@ -57,6 +61,45 @@ def key(device, code):
 def screenshot(device, path):
     Path(path).write_bytes(device.exec_out("screencap -p"))
     return path
+
+
+def open_uri(device, uri, package=None):
+    """Open an allowlisted URI through Android's VIEW intent.
+
+    Values are device-shell quoted as individual arguments. Arbitrary shell
+    commands are intentionally not part of the public bridge surface.
+    """
+    parsed = urlparse(uri)
+    if parsed.scheme.lower() not in _URI_SCHEMES:
+        raise ValueError(f"unsupported URI scheme: {parsed.scheme or '(none)'}")
+    args = ["am", "start", "-W", "-a", "android.intent.action.VIEW", "-d", uri]
+    if package:
+        if not re.fullmatch(r"[A-Za-z0-9_.]+", package):
+            raise ValueError("invalid Android package name")
+        args.extend(["-p", package])
+    return device.shell_argv(args)
+
+
+def compose_sms(device, recipient, body=""):
+    """Open the default SMS composer. This never presses Send."""
+    if not _PHONE.fullmatch(recipient):
+        raise ValueError("recipient must be a phone number")
+    number = re.sub(r"[ ()-]", "", recipient)
+    uri = f"smsto:{number}"
+    if body:
+        uri += f"?body={quote(body, safe='')}"
+    return open_uri(device, uri)
+
+
+def compose_whatsapp(device, recipient, body=""):
+    """Open a WhatsApp conversation/composer. This never presses Send."""
+    if not _PHONE.fullmatch(recipient):
+        raise ValueError("recipient must be a phone number with country code")
+    number = re.sub(r"[^0-9]", "", recipient)
+    uri = f"https://wa.me/{number}"
+    if body:
+        uri += f"?text={quote(body, safe='')}"
+    return open_uri(device, uri, package="com.whatsapp")
 
 
 def _escape(s):

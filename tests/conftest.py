@@ -23,6 +23,10 @@ class FakeDevice:
             return "com.android.adbkeyboard/.AdbIME"  # pretend ADBKeyboard is active
         return ""
 
+    def shell_argv(self, args):
+        import shlex
+        return self.shell(shlex.join(str(arg) for arg in args))
+
     def exec_out(self, cmd):
         self.calls.append(cmd)
         return b"PNGDATA"
