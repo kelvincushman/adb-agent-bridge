@@ -1,4 +1,4 @@
-"""`aab` CLI: ui | tap | text | screenshot."""
+"""aab CLI: semantic Android inspection, actions, and composers."""
 import argparse
 import sys
 
@@ -35,6 +35,18 @@ def main(argv=None):
 
     k = sub.add_parser("key", help="send a keyevent code (66 = ENTER)")
     k.add_argument("code", type=int)
+
+    u = sub.add_parser("open-uri", help="open an allowlisted URI with an Android VIEW intent")
+    u.add_argument("uri")
+    u.add_argument("--package", help="optional Android package to handle the URI")
+
+    sms = sub.add_parser("compose-sms", help="open an SMS draft; never presses Send")
+    sms.add_argument("recipient")
+    sms.add_argument("--body", default="")
+
+    wa = sub.add_parser("compose-whatsapp", help="open a WhatsApp draft; never presses Send")
+    wa.add_argument("recipient")
+    wa.add_argument("--body", default="")
 
     a = p.parse_args(argv)
     b = Bridge(a.serial)
@@ -77,6 +89,12 @@ def _dispatch(a, b, t):
         b.swipe(*a.coords, ms=a.ms)
     elif a.cmd == "key":
         b.key(a.code)
+    elif a.cmd == "open-uri":
+        b.open_uri(a.uri, package=a.package)
+    elif a.cmd == "compose-sms":
+        b.compose_sms(a.recipient, a.body)
+    elif a.cmd == "compose-whatsapp":
+        b.compose_whatsapp(a.recipient, a.body)
 
 
 if __name__ == "__main__":

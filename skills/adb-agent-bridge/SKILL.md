@@ -1,6 +1,6 @@
 ---
 name: adb-agent-bridge
-description: Control Android phones semantically over plain ADB - read the UI element tree, tap elements by text/id/desc, type instantly, screenshot, and draw Set-of-Marks overlays. Use whenever a task involves driving an Android device, before reaching for screenshot-and-guess vision control.
+description: Control Android phones semantically over plain ADB - read the UI tree, tap by text/id/desc, type, open safe URIs, and prepare SMS or WhatsApp drafts. Use whenever a task involves driving an Android device, before screenshot-and-guess vision control.
 ---
 
 # adb-agent-bridge: semantic Android control
@@ -43,7 +43,14 @@ aab swipe 540 1600 540 400      # scroll
 aab key 66                      # keyevent (66=ENTER, 4=BACK, 3=HOME)
 aab marks annotated.png         # Set-of-Marks overlay + printed legend
 aab screenshot out.png
+aab open-uri https://example.com
+aab compose-sms +447700900123 --body "Draft only"
+aab compose-whatsapp +447700900123 --body "Draft only"
 ```
+
+The compose commands populate the relevant app and stop before **Send**.
+Inspect the resulting UI, obtain explicit approval, tap Send exactly once,
+then inspect again. Never represent a prepared composer as a sent message.
 
 Python (same capabilities): `from adb_agent_bridge import Bridge`;
 `b = Bridge("SERIAL")`; `b.find(text="Post")`, `b.tap(el)`, `b.text(s)`,
