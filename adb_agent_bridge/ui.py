@@ -19,6 +19,7 @@ class Element:
     clickable: bool
     scrollable: bool
     enabled: bool
+    parent_index: int | None = None
 
     @property
     def center(self):
@@ -28,8 +29,13 @@ class Element:
 
 def parse(xml_text):
     els = []
-    for node in ET.fromstring(xml_text).iter("node"):
-        m = _BOUNDS.match(node.get("bounds", ""))
+    stack = [(ET.fromstring(xml_text), None)]
+    while stack:
+        node, parent = stack.pop()
+        m = _BOUNDS.match(node.get("bounds", "")) if node.tag == "node" else None
+        current = len(els) if m else None
+        # A missing-bounds intermediary cannot prove an actionable ancestor.
+        stack.extend((child, current) for child in reversed(list(node)))
         if not m:
             continue
         left, top, right, bottom = map(int, m.groups())
@@ -42,6 +48,7 @@ def parse(xml_text):
             clickable=node.get("clickable") == "true",
             scrollable=node.get("scrollable") == "true",
             enabled=node.get("enabled") == "true",
+            parent_index=parent,
         ))
     return els
 
