@@ -1,4 +1,6 @@
 """Parse `uiautomator dump` XML into elements and find them semantically."""
+from __future__ import annotations
+
 import re
 import time
 import xml.etree.ElementTree as ET
