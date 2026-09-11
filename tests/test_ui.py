@@ -70,3 +70,15 @@ def test_dump_truncated_xml_raises_runtimeerror_not_parseerror():
     with pytest.raises(RuntimeError):  # documented fallback contract, not ParseError
         ui.dump(d)
     assert len(d.calls) == 2
+
+
+def test_parent_indices_preserve_tree_without_inventing_geometric_ancestry():
+    xml = '''<hierarchy><node bounds="[0,0][100,100]" clickable="true" enabled="true">
+      <node bounds="[10,10][30,30]" content-desc="Post" enabled="true"/>
+      <node bounds="[10,10][30,30]" clickable="true" enabled="true"/>
+      <node enabled="false"><node bounds="[10,10][20,20]" text="Hidden"/></node>
+    </node><node bounds="[10,10][30,30]" text="Sibling"/></hierarchy>'''
+    els = ui.parse(xml)
+    assert [e.parent_index for e in els] == [None, 0, 0, None, None]
+    assert not els[1].clickable  # Parser does not rewrite the original flag.
+    assert els[1].desc == "Post"

@@ -298,3 +298,10 @@ must retain the attribution notice.
 ADBKeyboard by [senzhk](https://github.com/senzhk/ADBKeyBoard) inspired the
 unicode input approach and is driven via its documented broadcast intents.
 This project contains no ADBKeyboard code.
+
+Parsed `Element` objects include `parent_index`, the index of their XML parent
+in the same `ui()` result, or `None` for a root/missing-bounds parent. This allows
+callers to recognize labels inside clickable controls using actual hierarchy,
+without guessing parentage from overlapping rectangles. The original `clickable`
+and `enabled` flags are unchanged; callers must still verify an enabled control
+and reject ambiguous matches before tapping. Indices apply only to that dump.
