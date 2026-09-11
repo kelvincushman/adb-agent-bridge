@@ -305,3 +305,8 @@ callers to recognize labels inside clickable controls using actual hierarchy,
 without guessing parentage from overlapping rectangles. The original `clickable`
 and `enabled` flags are unchanged; callers must still verify an enabled control
 and reject ambiguous matches before tapping. Indices apply only to that dump.
+
+Package builds use the source package only. Generated `build/`, `dist/` and
+metadata directories are ignored rather than committed, preventing stale build
+copies from replacing reviewed source in a wheel. Release 0.2.1 includes XML
+parent indices in the installed package as well as the checkout.
